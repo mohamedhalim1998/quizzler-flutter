@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:quizzler/question.dart';
+import 'package:quizzler/question_bank.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 void main() => runApp(Quizzler());
 
@@ -25,6 +28,38 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
+  QuestionBank questionBank = QuestionBank();
+  List<Widget> answers = [];
+
+  void addRightAnswer() {
+    answers.add(Icon(Icons.check, color: Colors.green));
+  }
+
+  void addWrongAnswer() {
+    answers.add(Icon(Icons.close, color: Colors.red));
+  }
+
+  void showAlert() {
+    Alert(
+      context: context,
+      type: AlertType.success,
+      title: "Finished",
+      desc: "The quiz has finished",
+      buttons: [
+        DialogButton(
+          child: Text(
+            "Again",
+            style: TextStyle(color: Colors.white, fontSize: 20),
+          ),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          width: 120,
+        )
+      ],
+    ).show();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -37,7 +72,7 @@ class _QuizPageState extends State<QuizPage> {
             padding: EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                'This is where the question text will go.',
+                questionBank.getQuestionText(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 25.0,
@@ -61,7 +96,19 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                //The user picked true.
+                setState(() {
+                  if (questionBank.getQuestionAnswer()) {
+                    addRightAnswer();
+                  } else {
+                    addWrongAnswer();
+                  }
+                  if (!questionBank.moveToNext()) {
+                    questionBank.reset();
+                    answers = [];
+                    showAlert();
+                  }
+
+                });
               },
             ),
           ),
@@ -79,12 +126,27 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                //The user picked false.
+                setState(() {
+                  if (!questionBank.getQuestionAnswer()) {
+                    addRightAnswer();
+                  } else {
+                    addWrongAnswer();
+                  }
+                  if (!questionBank.moveToNext()) {
+                    questionBank.reset();
+                    answers = [];
+                    showAlert();
+
+                    return;
+                  }
+                });
               },
             ),
           ),
         ),
-        //TODO: Add a Row here as your score keeper
+        Row(
+          children: answers,
+        ),
       ],
     );
   }
